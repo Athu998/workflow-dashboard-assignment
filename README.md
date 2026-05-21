@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # VynqeOps — Internal Dashboard
 
 You just joined Vynqe. It's day one. No one has time to onboard you properly.
@@ -249,3 +250,8 @@ Each candidate does a 5-minute walkthrough after. Show what you built. Explain y
 You don't have to fix the data or make it perfect. Just make the UI survive it and work well anyway.
 
 If you notice anomalies beyond what the tasks mention, note them in DECISIONS.md under "Bugs I found beyond the task list." That section is optional but it signals a lot.
+=======
+# workflow-dashboard-assignment
+>>>>>>> 4f3221ca40b9432e25a015251b521cc91414b88e
+#   V y n q e T a s k  
+ 
