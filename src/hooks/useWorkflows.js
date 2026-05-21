@@ -11,22 +11,41 @@ import { useState, useEffect } from 'react'
 export function useWorkflows() {
   // BUG (T-04): loading starts as false — UI renders before data arrives.
   // Should be: const [loading, setLoading] = useState(true)
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(true)
+
   const [error, setError] = useState(null)
   const [data, setData] = useState(null)
 
   useEffect(() => {
     // BUG (T-04): no try/catch, no .catch() — network errors are swallowed.
     // BUG (T-04b): Effect has no dependency array or changing deps — runs infinitely
-    fetch('/data.json')
-      .then(res => res.json())
-      .then(json => {
+
+    async function fetchData() {
+      try {
+        setLoading(true)
+
+        const res = await fetch('/data.json')
+
+        if (!res.ok) {
+          throw new Error('Failed to fetch workflows')
+        }
+
+        const json = await res.json()
+
         setData(json)
+      } catch (err) {
+        setError(err.message)
+      } finally {
         // BUG (T-04): setLoading(false) never called because loading never
         // set to true. Candidate needs to wire the full loading lifecycle.
-      })
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+
     // Missing: .catch(err => setError(err))
-  })
+  }, [])
 
   return { data, loading, error }
 }

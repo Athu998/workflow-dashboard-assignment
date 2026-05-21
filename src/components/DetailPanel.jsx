@@ -15,7 +15,7 @@
 //
 // Inline status colour map — copy-pasted again (T-07: extract to StatusBadge)
 
-import React from 'react'
+import React, { useState } from 'react'
 
 // TODO (T-07): replace this with <StatusBadge status={workflow.status} />
 function getStatusColour(status) {
@@ -31,6 +31,8 @@ function getStatusColour(status) {
 }
 
 export default function DetailPanel({ workflow, onClose }) {
+  const [notes, setNotes] = useState(workflow?.notes ?? '')
+
   // T-05: If no workflow is selected, show the empty state.
   if (!workflow) {
     return (
@@ -53,8 +55,17 @@ export default function DetailPanel({ workflow, onClose }) {
   //   - Notes field
   //   - suggested_actions array (hint for T-08)
 
+  const updatedAt = workflow.updated_at
+    ? new Date(workflow.updated_at).toLocaleString([], {
+        month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit',
+      })
+    : null
+
   return (
     <div className="detail-panel">
+
+      {/* Header — title, client, status, close button */}
       <div style={{ padding: '20px', borderBottom: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
@@ -99,20 +110,163 @@ export default function DetailPanel({ workflow, onClose }) {
         </div>
       </div>
 
-      {/* TODO (T-05): replace this placeholder with real content */}
-      <div style={{
-        flex: 1,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        color: 'var(--text-muted)',
-        fontSize: '11px',
-        padding: '24px',
-        textAlign: 'center',
-        lineHeight: 1.8,
-      }}>
-        T-05: Build the rest of this panel.<br />
-        History, notes, dates, actions.
+      {/* Body — scrollable */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '20px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+        {/* Meta — assignee, updated, priority */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '12px' }}>
+
+          {/* Assignee */}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Assignee</span>
+            {workflow.assignee
+              ? <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{
+                    width: '20px', height: '20px', borderRadius: '50%',
+                    background: 'var(--accent)', color: '#fff',
+                    fontSize: '9px', fontWeight: 600,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    {workflow.assignee.avatar}
+                  </span>
+                  {workflow.assignee.name}
+                </span>
+              : <span style={{ color: 'var(--text-muted)' }}>Unassigned</span>
+            }
+          </div>
+
+          {/* Last updated */}
+          {updatedAt && (
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Last updated</span>
+              <span>{updatedAt}</span>
+            </div>
+          )}
+
+          {/* Priority */}
+          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ color: 'var(--text-muted)' }}>Priority</span>
+            <span>{workflow.priority ?? '—'}</span>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        {workflow.progress != null && (
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', marginBottom: '6px' }}>
+              <span style={{ color: 'var(--text-muted)' }}>Progress</span>
+              <span>{workflow.progress}%</span>
+            </div>
+            <div style={{ height: '4px', borderRadius: '2px', background: 'var(--border)' }}>
+              <div style={{
+                height: '100%',
+                borderRadius: '2px',
+                width: `${workflow.progress}%`,
+                background: getStatusColour(workflow.status),
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+          </div>
+        )}
+
+        {/* Tags */}
+        {workflow.tags?.length > 0 && (
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            {workflow.tags.map(tag => (
+              <span key={tag} style={{
+                fontSize: '10px',
+                padding: '2px 8px',
+                borderRadius: '999px',
+                border: '1px solid var(--border)',
+                color: 'var(--text-secondary)',
+              }}>
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* History timeline — workflow.history */}
+        {workflow.history?.length > 0 && (
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              History
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {workflow.history.map((entry, i) => (
+                <div key={i} style={{ display: 'flex', gap: '10px', fontSize: '11px' }}>
+                  <div style={{
+                    width: '6px', height: '6px', borderRadius: '50%',
+                    background: 'var(--text-muted)',
+                    marginTop: '4px', flexShrink: 0,
+                  }} />
+                  <div>
+                    <div style={{ color: 'var(--text-primary)' }}>{entry.note ?? entry.action ?? '—'}</div>
+                    <div style={{ color: 'var(--text-muted)', marginTop: '2px' }}>
+                      {entry.timestamp
+                        ? new Date(entry.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                        : null}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Notes — editable */}
+        <div>
+          <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            Notes
+          </div>
+          <textarea
+            value={notes}
+            onChange={e => setNotes(e.target.value)}
+            placeholder="Add notes..."
+            style={{
+              width: '100%',
+              minHeight: '80px',
+              background: 'var(--bg-elevated)',
+              border: '1px solid var(--border)',
+              borderRadius: '6px',
+              color: 'var(--text-primary)',
+              fontSize: '12px',
+              padding: '8px',
+              resize: 'vertical',
+              fontFamily: 'var(--font-sans)',
+              boxSizing: 'border-box',
+            }}
+          />
+        </div>
+
+        {/* suggested_actions — hint for T-08 */}
+        {workflow.suggested_actions?.length > 0 && (
+          <div>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+              Suggested actions
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {workflow.suggested_actions.map(action => (
+                <button
+                  key={action}
+                  style={{
+                    textAlign: 'left',
+                    background: 'var(--bg-elevated)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '6px',
+                    padding: '8px 12px',
+                    fontSize: '12px',
+                    color: 'var(--text-secondary)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {action.replace(/_/g, ' ')}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   )

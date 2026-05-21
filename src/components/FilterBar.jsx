@@ -11,7 +11,7 @@
 // BUG (T-03): Search input has an onChange handler but it also doesn't
 // propagate to the parent — onSearchChange is never called.
 
-import React, { useState } from 'react'
+import React from 'react'
 
 const FILTERS = [
   { label: 'All',       value: 'all' },
@@ -30,12 +30,12 @@ export default function FilterBar({
 }) {
   // BUG (T-03): Local state shadows the parent's activeFilter.
   // The button highlights change locally but the prop is never updated.
-  const [activeLabel, setActiveLabel] = useState('All')
+  // const [activeLabel, setActiveLabel] = useState('All')
 
   function handleClick(filter) {
     // BUG (T-03): only updates local label state — parent never notified.
     // Fix: also call onFilterChange(filter.value)
-    setActiveLabel(filter.label)
+    onFilterChange(filter.value)
   }
 
   return (
@@ -43,7 +43,8 @@ export default function FilterBar({
       {FILTERS.map(f => (
         <button
           key={f.value}
-          className={`filter-btn ${activeLabel === f.label ? 'active' : ''}`}
+          className={`filter-btn ${
+  activeFilter === f.value ? 'active' : ''}`}
           onClick={() => handleClick(f)}
         >
           {f.label}
@@ -51,23 +52,19 @@ export default function FilterBar({
       ))}
 
       <div className="filter-bar-right">
-        <input
-          className="search-input"
-          type="text"
-          placeholder="Search workflows..."
-          defaultValue={searchQuery}
-          onChange={e => {
-            // BUG (T-03): reads value but never calls onSearchChange
-            const _val = e.target.value
-            // onSearchChange(_val) — this line is missing
-          }}
-        />
-
+       <input
+  className="search-input"
+  type="text"
+  placeholder="Search workflows..."
+  value={searchQuery}          
+  onChange={e => onSearchChange(e.target.value)}
+/>
+</div>
         {/* T-09: Summarise button — wire to onSummarise */}
         <button className="btn-summarise" onClick={onSummarise}>
           Summarise today
         </button>
-      </div>
+      
     </div>
   )
 }

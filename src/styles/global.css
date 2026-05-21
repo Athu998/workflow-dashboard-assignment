@@ -71,6 +71,7 @@ html, body, #root {
   height: 56px;
   background: var(--bg-surface);
   border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
   /* BUG (T-01): flex-wrap is missing — on narrow viewports nav items overflow */
   flex-shrink: 0;
 }
@@ -115,10 +116,10 @@ html, body, #root {
  */
 .workflow-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 16px;
-  max-width: 1400px;
-  margin: 0 auto;
+  /* max-width: 1400px; */
+  /* margin: 0 auto; */
   /* Missing: flex-wrap or response breakpoint for tablets */
 }
 
@@ -394,6 +395,7 @@ html, body, #root {
   border-top: 1px solid var(--border);
   overflow-y: auto;
   padding: 12px 24px;
+  max-height: 100%;
   /* TODO: T-06 — ActivityFeed component renders this container but 
    * doesn't populate it. Candidate wires the data. */
 }
@@ -433,3 +435,14 @@ html, body, #root {
 .syne { font-family: var(--font-display); }
 .muted { color: var(--text-muted); }
 .secondary { color: var(--text-secondary); }
+
+@media (max-width: 768px) {
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-panel {
+    display: none;
+  }
+}
+

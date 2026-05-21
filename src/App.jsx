@@ -99,7 +99,40 @@ export default function App() {
   //
   // T-03: Filter logic lives here but never runs because FilterBar
   // doesn't call onFilterChange. Fix FilterBar first.
-  const displayedWorkflows = HARDCODED_CARDS
+  const workflows = data?.workflows ?? []
+
+const displayedWorkflows = workflows.filter(workflow => {
+  const status =
+    workflow.status?.toLowerCase() || 'unknown'
+
+  const matchesFilter =
+    activeFilter === 'all' ||
+    status === activeFilter
+
+  const query = searchQuery.trim().toLowerCase()
+
+const matchesSearch =
+  query === '' ||
+  workflow.title?.toLowerCase().includes(query) ||
+  workflow.client_name?.toLowerCase().includes(query)
+
+  return matchesFilter && matchesSearch
+})
+if (loading) {
+  return (
+    <div className="state-fullscreen">
+      <p>Loading workflows...</p>
+    </div>
+  )
+}
+
+if (error) {
+  return (
+    <div className="state-fullscreen">
+      <p>Error: {error}</p>
+    </div>
+  )
+}
 
   function handleSummarise() {
     // T-09: Mock AI summary. Wire this up.
@@ -125,7 +158,7 @@ export default function App() {
               review:  'var(--status-review)',
             }
             // Uses hardcoded cards so count is always wrong until T-02 is fixed
-            const count = displayedWorkflows.filter(
+           const count = workflows.filter(
               w => w.status?.toLowerCase() === s
             ).length
             return (
@@ -160,18 +193,38 @@ export default function App() {
         <div className="content-area">
 
           {/* Workflow grid */}
-          <div className="workflow-grid-container">
-            <div className="workflow-grid">
-              {displayedWorkflows.map(workflow => (
-                <WorkflowCard
-                  key={workflow.id}
-                  workflow={workflow}
-                  isSelected={selectedWorkflow?.id === workflow.id}
-                  onClick={setSelectedWorkflow}
-                />
-              ))}
-            </div>
-          </div>
+         <div className="workflow-grid">
+  {displayedWorkflows.length > 0 ? (
+    displayedWorkflows.map(workflow => (
+      <WorkflowCard
+        key={workflow.id}
+        workflow={workflow}
+        isSelected={selectedWorkflow?.id === workflow.id}
+        onClick={setSelectedWorkflow}
+      />
+    ))
+  ) : (
+    <div className="empty-state">
+      <h3>No workflows found</h3>
+
+      <p>
+        No workflows match "
+        {searchQuery || activeFilter}
+        "
+      </p>
+
+      <button
+        className="clear-btn"
+        onClick={() => {
+          setSearchQuery('')
+          setActiveFilter('all')
+        }}
+      >
+        Clear Filters
+      </button>
+    </div>
+  )}
+</div>
 
           {/* Activity feed — T-06: shell only */}
           <ActivityFeed
